@@ -17,11 +17,12 @@ namespace AzureSearch.SDKHowTo
         static IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
         static IConfigurationRoot configuration = builder.Build();
 
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             // First, connect to a search service
             SearchServiceClient searchService = CreateSearchServiceClient(configuration);
-            string indexName = configuration["SearchIndexName"];
+
+            string indexName = "hotel-rooms-sample";
 
             // Next, create the Azure Search index
             Console.WriteLine("Deleting index...\n");
@@ -74,9 +75,15 @@ namespace AzureSearch.SDKHowTo
 
         private static async Task CreateAndRunCosmosDbIndexer(string indexName, SearchServiceClient searchService)
         {
+            // Append the database name to the connection string
+            string cosmosConnectString = 
+                configuration["CosmosDBConnectionString"]
+                + ";Database=" 
+                + configuration["CosmosDBDatabaseName"];
+
             DataSource cosmosDbDataSource = DataSource.CosmosDb(
-                name: "hotel-rooms-db", 
-                cosmosDbConnectionString: configuration["CosmosDBConnectionString"],
+                name: configuration["CosmosDBDatabaseName"], 
+                cosmosDbConnectionString: cosmosConnectString,
                 collectionName: "hotels",
                 useChangeDetection: true);
 

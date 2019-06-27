@@ -12,7 +12,7 @@ namespace AzureSearch.SDKHowTo
         [IsFilterable]
         public string HotelId { get; set; }
 
-        [IsSearchable, IsSortable]
+        [IsSearchable, IsFilterable, IsSortable]
         public string HotelName { get; set; }
 
         [IsSearchable]
