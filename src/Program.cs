@@ -120,6 +120,10 @@ namespace AzureSearch.SDKHowTo
             {
                 Console.WriteLine("Failed to run indexer: {0}", e.Response.Content);
             }
+
+            // delay so the indexer can make some progress
+            await Task.Delay(5000);
+            CheckIndexerStatus(cosmosDbIndexer, searchService);
         }
 
         private static async Task CreateAndRunBlobIndexer(string indexName, SearchServiceClient searchService)
@@ -166,6 +170,39 @@ namespace AzureSearch.SDKHowTo
             catch (CloudException e) when (e.Response.StatusCode == (HttpStatusCode)429)
             {
                 Console.WriteLine("Failed to run indexer: {0}", e.Response.Content);
+            }
+
+            // delay so the indexer can make some progress
+            await Task.Delay(5000);
+            CheckIndexerStatus(blobIndexer, searchService);
+        }
+
+        static void CheckIndexerStatus(Indexer indexer, SearchServiceClient searchService)
+        {
+            try
+            {
+                IndexerExecutionInfo execInfo = searchService.Indexers.GetStatus(indexer.Name);
+
+                Console.WriteLine("Indexer has run {0} times.", execInfo.ExecutionHistory.Count);
+
+                Console.WriteLine("Indexer Status: " + execInfo.Status.ToString());
+
+                IndexerExecutionResult result = execInfo.LastResult;
+
+                Console.WriteLine("Latest run");
+                Console.WriteLine("  Run Status: {0}", result.Status.ToString());
+                Console.WriteLine("  Total Documents: {0}, Failed: {1}", result.ItemCount, result.FailedItemCount);
+
+                TimeSpan elapsed = result.EndTime.Value - result.StartTime.Value;
+                Console.WriteLine("  StartTime: {0:T}, EndTime: {1:T}, Elapsed: {2:t}", result.StartTime.Value, result.EndTime.Value, elapsed);
+
+                string errorMsg = (result.ErrorMessage == null) ? "none" : result.ErrorMessage;
+                Console.WriteLine("  ErrorMessage: {0}", errorMsg);
+                Console.WriteLine("  Document Errors: {0}, Warnings: {1}\n", result.Errors.Count, result.Warnings.Count);
+            }
+            catch (Exception e)
+            {
+                // Handle exception
             }
         }
     }
